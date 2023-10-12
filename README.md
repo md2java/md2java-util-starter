@@ -32,12 +32,18 @@
 	
 	@GetMapping("/hello")
 	@LogMethodInfo()
-	public String hello() {
+		public String hello() {
 		log.info("hello Rest....");
 		return "Hello";
 	}
-	
-}	
+  }	
+
+	output
+	--------
+	c.g.md2java.service.LogMethodInfoAspect  : ==> Method:DemoApplication.hello() request:[]
+	com.example.demo.DemoApplication         : hello Rest....
+	c.g.md2java.service.LogMethodInfoAspect  : ==< Method:DemoApplication.hello() response:Hello
+	c.g.md2java.service.LogMethodInfoAspect  : ##method=DemoApplication.hello()##execution-time=21ms
 	
 
 
