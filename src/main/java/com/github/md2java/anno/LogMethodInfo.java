@@ -1,0 +1,15 @@
+package com.github.md2java.anno;
+
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
+@Retention(RUNTIME)
+@Target(METHOD)
+public @interface LogMethodInfo {
+	boolean logRequest() default false;
+	boolean logResponse() default false;
+	boolean logTime() default true;
+}
