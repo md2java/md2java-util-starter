@@ -1,4 +1,4 @@
-package com.github.md2java;
+package io.github.md2java;
 
 import javax.annotation.PostConstruct;
 
@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 @Configuration
 @ConditionalOnClass(value = Aspect.class)
 @EnableAspectJAutoProxy
-@ComponentScan(basePackages = "com.github.md2java")
+@ComponentScan(basePackages = "io.github.md2java")
 @Slf4j
 public class M2javaUtilAutoConfiguration {
 

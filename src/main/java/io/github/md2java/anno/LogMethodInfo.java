@@ -1,4 +1,4 @@
-package com.github.md2java.anno;
+package io.github.md2java.anno;
 
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;

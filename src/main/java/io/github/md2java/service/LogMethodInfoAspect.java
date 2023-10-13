@@ -1,4 +1,4 @@
-package com.github.md2java.service;
+package io.github.md2java.service;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -10,8 +10,7 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
 
-import com.github.md2java.anno.LogMethodInfo;
-
+import io.github.md2java.anno.LogMethodInfo;
 import lombok.extern.slf4j.Slf4j;
 
 @Aspect
@@ -19,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class LogMethodInfoAspect {
 
-	@Pointcut("@annotation(com.github.md2java.anno.LogMethodInfo)")
+	@Pointcut("@annotation(io.github.md2java.anno.LogMethodInfo)")
 	public void logMethodInfo() {
 
 	}

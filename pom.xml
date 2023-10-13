@@ -9,7 +9,7 @@
 		<version>2.7.16</version>
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.github.md2java</groupId>
+	<groupId>io.github.md2java</groupId>
 	<artifactId>md2java-util-starter</artifactId>
 	<version>1.0.2-SNAPSHOT</version>
 	<name>m2java-util-starter</name>
