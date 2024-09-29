@@ -23,8 +23,8 @@ public class ClusterlockinfoEndpoint {
 	@ReadOperation
 	public Map<String, NodeInfo> clusterInfo() {
 		Map<String, NodeInfo> ret = new ConcurrentHashMap<>();
-		ret.put("responser", lockInfoDataService.findNodeInfo());
 		ret.putAll(lockInfoDataService.findClusterInfo());
+		ret.put("responser", lockInfoDataService.findNodeInfo());
 		return ret;
 	}
 }

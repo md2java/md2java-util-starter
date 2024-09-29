@@ -1,5 +1,6 @@
 package io.github.md2java.service.lock;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -11,6 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.ParameterizedTypeReference;
@@ -32,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "md2java.util.cluser-lock.enabled",havingValue = "true",matchIfMissing = false)
+@ConditionalOnProperty(name = "md2java.util.cluser-lock.enabled", havingValue = "true", matchIfMissing = false)
 public class LockInfoDataServiceImpl implements LockInfoDataService {
 
 	private Map<String, NodeInfo> lockInfo = new ConcurrentHashMap<>();
@@ -62,29 +64,57 @@ public class LockInfoDataServiceImpl implements LockInfoDataService {
 				new CustomizableThreadFactory("node_sync_"));
 		String syncUrl = String.format("%s/actuator/nodelockinfo", applicationHost);
 		workers.scheduleAtFixedRate(() -> {
-			Map<String, NodeInfo> info = this.getInfo(syncUrl);
-			log.debug("received: {} ",info);
-			if (Objects.isNull(info)) {
+			try {
+				Map<String, NodeInfo> info = this.getInfo(syncUrl);
+				log.debug("received: {} ", info);
+				if (Objects.isNull(info)) {
+					updateNodeInfo(true);
+					return;
+				}
+
+				info.remove("responser");
+				clusterLockInfo.putAll(info);
+				info.remove(nodeInfoUtil.getNodeId());
+				Optional<NodeInfo> otherActiveNode = info.values().stream().filter(s -> s.isLockActive()).findAny();
+				if (otherActiveNode.isPresent()) {
+					updateNodeInfo(false);
+					log.debug("lockinfo: {} ", lockInfo);
+					return;
+				}
 				updateNodeInfo(true);
-				return;
+				log.debug("lockinfo: {} ", lockInfo);
+
+			} catch (Exception e) {
+				log.error("went wrong: {} cause:{}", e.getMessage(),NodeInfoUtil.findRootCauseMessage(e));
 			}
-			info.remove(nodeInfoUtil.getNodeId());
-			info.remove("responser");
-			clusterLockInfo.putAll(info);
-			Optional<NodeInfo> otherActiveNode = info.values().stream().filter(s -> s.isLockActive()).findAny();
-			if (otherActiveNode.isPresent()) {
-				updateNodeInfo(false);
-			    log.debug("lockinfo: {} ",lockInfo);
-				return;
-			}
-			updateNodeInfo(true);
-			log.debug("lockinfo: {} ",lockInfo);
+
 		}, 0, 10, TimeUnit.SECONDS);
 	}
 
 	private void updateNodeInfo(boolean activeFlag) {
+
 		NodeInfo findNodeInfo = this.findNodeInfo();
+		if (activeFlag && findNodeInfo.isLockActive()) {
+			switchNodeIfNeeded(findNodeInfo);
+			return;
+		}
 		findNodeInfo.setLockActive(activeFlag);
+		if (activeFlag) {
+			findNodeInfo.setLockAtSince(LocalDateTime.now());
+			return;
+		}
+		findNodeInfo.setLockAtSince(null);
+	}
+
+	private void switchNodeIfNeeded(NodeInfo findNodeInfo) {
+		LocalDateTime lockAtSince = findNodeInfo.getLockAtSince();
+		if (Objects.isNull(lockAtSince)) {
+			return;
+		}
+		if (lockAtSince.plusMinutes(findNodeInfo.getLockAtMost()).isBefore(LocalDateTime.now())) {
+			findNodeInfo.setLockActive(false);
+			findNodeInfo.setLockAtSince(null);
+		}
 	}
 
 	private RestTemplate buildTemplate(int connTimeout, int readTimeout) {
@@ -113,11 +143,11 @@ public class LockInfoDataServiceImpl implements LockInfoDataService {
 	public NodeInfo findNodeInfo() {
 		return lockInfo.get(nodeInfoUtil.getNodeId());
 	}
+
 	@Override
 	public Map<String, NodeInfo> findClusterInfo() {
 		return clusterLockInfo;
 	}
-
 
 	private Map<String, NodeInfo> getInfo(String syncUrl) {
 		Map<String, NodeInfo> ret = new ConcurrentHashMap<>();
@@ -136,10 +166,14 @@ public class LockInfoDataServiceImpl implements LockInfoDataService {
 				}
 
 			} catch (Exception e) {
-				log.error("went wrong: {} ", e.getMessage());
+				String rootCause = NodeInfoUtil.findRootCauseMessage(e);
+				log.error("went wrong: {} rootcause: {} ", e.getMessage(),rootCause);
 			}
+		}
+		if (BooleanUtils.isFalse(ret.size() > clusterSize)) {
+			clusterLockInfo.clear();
+			clusterLockInfo.putAll(ret);
 		}
 		return ret;
 	}
-
 }
