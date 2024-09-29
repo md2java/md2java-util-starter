@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>io.github.md2java</groupId>
 	<artifactId>md2java-util-starter</artifactId>
-	<version>1.0.4-SNAPSHOT</version>
+	<version>1.0.5-SNAPSHOT</version>
 	<name>md2java-util-starter</name>
 	<description>spring boot starter for logging request/response and execution
 		time by annotation</description>
